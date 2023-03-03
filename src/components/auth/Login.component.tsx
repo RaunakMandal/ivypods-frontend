@@ -32,7 +32,7 @@ const Login = () => {
   };
 
   const checkUserName = async () => {
-    await AuthService.user_exists({ username: username.username })
+    await AuthService.user_exists({body: {username: username.username }})
       .then((res: any) => {
         const message = res.message as string;
         if (message.includes("already exists")) {
@@ -51,12 +51,11 @@ const Login = () => {
   };
 
   const handleLogin = async () => {
-    console.log(user);
-    
-    await AuthService.signin(user).then((res: any) => {
+    await AuthService.signin({body: user}).then((res: any) => {
       if (res.token) {
         setError({ ...error, show: false });
         localStorage.setItem("token", res.token);
+        localStorage.setItem("user", JSON.stringify(res.user));
         return window.location.replace("/");
       } else {
         setError({ message: res.message, show: true });

@@ -6,9 +6,9 @@ interface Props {
     children?: ReactNode
 }
 
-const Base = ({children, ...props} : Props) => {
+const Base = ({children} : Props) => {
   return (
-    <div className='container'>
+    <div className='container d-flex align-items-start justify-content-center'>
         {children}
     </div>
   )

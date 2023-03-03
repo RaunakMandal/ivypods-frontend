@@ -1,12 +1,16 @@
-import React from 'react'
+interface AlertProps {
+  type: string,
+  message: string,
+  show: boolean
+}
 
-const Alert = (props: {type: string, message: string, show: boolean}) => {
-  const alertType = `alert alert-${props.type}`;
+const Alert = ({type, message, show} : AlertProps) => {
+  const alertType = `alert alert-${type}`;
 
   return (
-    props.show ?
+    show ?
     <div className={alertType} role="alert">
-        {props.message}
+        {message}
     </div> : null
   )
 };
