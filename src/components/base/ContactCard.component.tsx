@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ContactsService } from "../../services/contacts.service";
 import "../../styles/components/contact-card.style.css";
 
@@ -9,6 +9,7 @@ interface ContactProps {
   phone: string;
   message: string;
   index: number;
+  setContacts?: any;
 }
 
 const ContactCard = ({
@@ -18,6 +19,7 @@ const ContactCard = ({
   phone,
   message,
   index,
+  setContacts,
 }: ContactProps) => {
   const collapseId = `collapseExample-${index}`;
   const collapseIdWithHash = `#collapseExample-${index}`;
@@ -30,6 +32,20 @@ const ContactCard = ({
   });
 
   const [editing, setEditing] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const [expanded, setExpanded] = useState(false);
+
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const element = document.getElementById(ref.current?.id || "");
+    element?.addEventListener("shown.bs.collapse", () => {
+      setExpanded(true);
+    });
+    element?.addEventListener("hidden.bs.collapse", () => {
+      setExpanded(false);
+    });
+  }, []);
 
   const handleDataChange = (e: any) => {
     setContact({
@@ -38,34 +54,73 @@ const ContactCard = ({
     });
   };
 
-  // TODO: Add proper error handling
-
   const handleEdit = async () => {
+    setLoading(true);
     await ContactsService.updateContact(_id, {
       token: localStorage.getItem("token"),
       body: contact,
-    }).then((res: any) => {
-      if (res.error) {
-        console.log(res.message);
-        return;
-      } else {
-        console.log(res.message);
+    })
+      .then((res: any) => {
+        if (res.error) {
+          return;
+        } else {
+          setContacts((prev: any) =>
+            prev.map((cont: any) => {
+              /**
+               * When a contact is edited, the contactSetter function is called
+               * with a callback function that maps through the contacts array
+               * and updates the edited contact.
+               */
+              if (cont._id === _id) {
+                return {
+                  ...cont,
+                  fullname: contact.fullname,
+                  email: contact.email,
+                  phone: contact.phone,
+                  message: contact.message,
+                };
+              } else {
+                return cont;
+              }
+            })
+          );
+        }
+      })
+      .catch((err: any) => {
+        console.log(err);
+      })
+      .finally(() => {
         setEditing(false);
-      }
-    });
+        setLoading(false);
+      });
   };
   const handleDelete = async () => {
+    setLoading(true);
     await ContactsService.deleteContact(_id, {
       token: localStorage.getItem("token"),
-    }).then((res: any) => {
-      if (res.error) {
-        console.log(res.message);
-        return;
-      } else {
-        console.log(res.message);
+    })
+      .then((res: any) => {
+        if (res.error) {
+          return;
+        } else {
+          /**
+           * When a contact is deleted, the contactSetter function is called
+           * with a callback function that filters out the deleted contact
+           * from the contacts array.
+           */
+          setContacts((prev: any) =>
+            prev.filter((cont: any) => cont._id !== _id)
+          );
+          setEditing(false);
+        }
+      })
+      .catch((err: any) => {
+        console.log(err);
+      })
+      .finally(() => {
         setEditing(false);
-      }
-    });
+        setLoading(false);
+      });
   };
   const handleCancel = () => {
     setEditing(false);
@@ -78,21 +133,21 @@ const ContactCard = ({
   };
 
   return (
-    <div className="contact-card">
+    <div className="contact-card mb-1">
       <li className="list-group-item d-flex justify-content-between align-items-start flex-column">
         <div className="ms-2 me-auto d-flex flex-row justify-content-between w-100">
           <div>{contact.fullname}</div>
           <span
-            className="badge bg-success rounded-pill"
+            className="badge rounded-pill"
             data-bs-toggle="collapse"
             data-bs-target={collapseIdWithHash}
             aria-expanded="false"
             aria-controls={collapseId}
           >
-            Expand
+            {expanded ? "Collapse" : "Expand"}
           </span>
         </div>
-        <div className="collapse collapse-details" id={collapseId}>
+        <div className="collapse collapse-details" id={collapseId} ref={ref}>
           <div className="card card-body">
             <input
               type="text"
@@ -132,19 +187,33 @@ const ContactCard = ({
             />
             <button
               className="btn btn-outline-primary"
-              onClick={() => !editing ? setEditing(true) : handleEdit()}
+              onClick={() => (!editing ? setEditing(true) : handleEdit())}
+              disabled={loading}
             >
+              <span
+                className="spinner-border spinner-border-sm me-2"
+                hidden={!loading || !editing}
+              ></span>
               {editing ? "Save" : "Edit"}
             </button>
             <button
-              className="btn btn-outline-warning"
+              className="btn btn-outline-danger"
+              onClick={handleDelete}
+              disabled={loading}
+            >
+              <span
+                className="spinner-border spinner-border-sm me-2"
+                hidden={!loading || editing}
+              ></span>
+              Delete
+            </button>
+            <button
+              className="btn btn-outline-secondary"
               onClick={handleCancel}
-              disabled={!editing}
+              data-bs-toggle="collapse"
+              data-bs-target={collapseIdWithHash}
             >
               Cancel
-            </button>
-            <button className="btn btn-outline-danger" onClick={handleDelete}>
-              Delete
             </button>
           </div>
         </div>

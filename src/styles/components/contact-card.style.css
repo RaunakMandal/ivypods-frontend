@@ -5,6 +5,7 @@
 .badge {
     padding: 8px;
     cursor: pointer;
+    background-color: #e6425e;
 }
 
 .collapse-details {

@@ -5,7 +5,7 @@ interface AlertProps {
 }
 
 const Alert = ({type, message, show} : AlertProps) => {
-  const alertType = `alert alert-${type}`;
+  const alertType = `alert alert-${type} w-100`;
 
   return (
     show ?

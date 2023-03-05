@@ -8,6 +8,10 @@ const signin = (params: any) => {
     return ApiService.post('user/signin', params);
 };
 
+const signup = (params: any) => {
+    return ApiService.post('user/signup', params);
+};
+
 export const AuthService = {
-    user_exists, signin
+    user_exists, signin, signup
 };
